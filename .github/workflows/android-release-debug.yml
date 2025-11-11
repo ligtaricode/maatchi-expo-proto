@@ -1,0 +1,63 @@
+name: Android Debug APK Release
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Prebuild Android (Expo)
+        run: npx expo prebuild -p android --non-interactive
+
+      - name: Assemble Debug APK
+        run: |
+          cd android
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Mirror APK into repo
+        run: |
+          mkdir -p public
+          cp android/app/build/outputs/apk/debug/app-debug.apk public/app-debug.apk
+
+      - name: Commit APK mirror
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore(release): add app-debug.apk mirror'
+          file_pattern: 'public/app-debug.apk'
+
+      - name: Publish GitHub Release (debug)
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: debug-${{ github.run_id }}
+          name: Android Debug APK (run ${{ github.run_id }})
+          body: |
+            Auto-generated debug build from CI.
+            Commit: ${{ github.sha }}
+            Notes: Includes ads placeholders (banner ~45s refresh; interstitial every 4 opens) and Maatchi theme.
+          prerelease: true
+          files: |
+            android/app/build/outputs/apk/debug/app-debug.apk
