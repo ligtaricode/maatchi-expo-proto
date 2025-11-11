@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Maatchi",
+    "slug": "maatchi-expo-proto",
+    "version": "1.0.0",
+    "sdkVersion": "49.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android"],
+    "jsEngine": "hermes",
+    "android": { "package": "ai.maatchi.proto", "permissions": [] },
+    "ios": { "supportsTablet": true },
+    "extra": {}
+  }
+}
