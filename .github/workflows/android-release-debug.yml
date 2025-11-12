@@ -30,20 +30,28 @@ jobs:
 
       - name: Diagnostics (Node/npm/Expo)
         run: |
-         node -v
-         npm -v
-         npx expo --version || true
+          node -v
+          npm -v
+          npx expo --version || npx --yes expo-cli@latest --version
+          npx expo doctor || true
 
-      - name: Accept Android SDK licences
-        run: yes| sdkmanager --licenses
-
-      - name: Boost Gradle memory
-        run: |
-         echo 'org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8' >> android/gradle.properties
-         echo 'kotlin.daemon.jvmargs=-Xmx1g' >> android/gradle.properties
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses
 
       - name: Prebuild Android (Expo)
         run: npx expo prebuild -p android --non-interactive
+
+      - name: Prepare Gradle properties (heap/workers)
+        run: |
+          # Ensure file exists, then append our settings
+          touch android/gradle.properties
+          {
+            echo 'org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8'
+            echo 'kotlin.daemon.jvmargs=-Xmx1g'
+            echo 'org.gradle.workers.max=2'
+          } >> android/gradle.properties
+          echo '--- gradle.properties ---'
+          cat android/gradle.properties
 
       - name: Clean Gradle (fresh build)
         run: |
