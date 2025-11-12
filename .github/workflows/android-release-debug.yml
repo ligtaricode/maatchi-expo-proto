@@ -28,8 +28,27 @@ jobs:
       - name: Install deps
         run: npm install
 
+      - name: Diagnostics (Node/npm/Expo)
+        run: |
+         node -v
+         npm -v
+         npx expo --version || true
+
+      - name: Accept Android SDK licences
+        run: yes| sdkmanager --licenses
+
+      - name: Boost Gradle memory
+        run: |
+         echo 'org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8' >> android/gradle.properties
+         echo 'kotlin.daemon.jvmargs=-Xmx1g' >> android/gradle.properties
+
       - name: Prebuild Android (Expo)
         run: npx expo prebuild -p android --non-interactive
+
+      - name: Clean Gradle (fresh build)
+        run: |
+          cd android
+          ./gradlew --no-daemon clean
 
       - name: Assemble Debug APK
         run: |
